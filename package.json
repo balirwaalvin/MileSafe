@@ -1,5 +1,24 @@
 {
+  "name": "milesafe",
+  "version": "1.0.0",
+  "description": "Mile Safe - Road Safety Application",
+  "main": "index.html",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "build": "echo 'Building application...' && cd backend && npm install",
+    "deploy": "chmod +x deploy.sh && ./deploy.sh",
+    "update": "chmod +x update.sh && ./update.sh",
+    "backup": "chmod +x backup.sh && ./backup.sh"
+  },
+  "keywords": ["road-safety", "emergency", "education", "sos"],
+  "author": "Mile Safe Team",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
