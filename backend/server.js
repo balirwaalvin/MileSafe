@@ -3,12 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const path = require('path');
-const https = require('https'); // Use built-in https module instead
+const fetch = require('node-fetch');
 require('dotenv').config();
 
 // Initialize express app
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080; // Changed default to 8080 for deployment platform
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // CORS configuration
@@ -86,43 +86,15 @@ app.post('/api/sos-alerts/:id/resolve', (req, res) => {
 // Get global accident-prone zones (NYC demo)
 app.get('/api/accidents', async (req, res) => {
   try {
-    // Use built-in https module instead of node-fetch
-    const url = 'https://data.cityofnewyork.us/resource/h9gi-nx95.json?$limit=500';
-    
-    const request = https.get(url, (response) => {
-      let data = '';
-      
-      response.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      response.on('end', () => {
-        try {
-          const jsonData = JSON.parse(data);
-          // Only send lat/lng for heatmap
-          const accidentPoints = jsonData
-            .filter(d => d.latitude && d.longitude)
-            .map(d => ({ lat: parseFloat(d.latitude), lng: parseFloat(d.longitude), intensity: 0.7 }));
-          res.json(accidentPoints);
-        } catch (parseError) {
-          console.error('Error parsing accident data:', parseError);
-          res.status(500).json({ error: 'Failed to parse accident data' });
-        }
-      });
-    });
-    
-    request.on('error', (err) => {
-      console.error('Error fetching accident data:', err);
-      res.status(500).json({ error: 'Failed to fetch accident data' });
-    });
-    
-    request.setTimeout(10000, () => {
-      request.destroy();
-      res.status(500).json({ error: 'Request timeout' });
-    });
-    
+    const response = await fetch('https://data.cityofnewyork.us/resource/h9gi-nx95.json?$limit=500');
+    const data = await response.json();
+    // Only send lat/lng for heatmap
+    const accidentPoints = data
+      .filter(d => d.latitude && d.longitude)
+      .map(d => ({ lat: parseFloat(d.latitude), lng: parseFloat(d.longitude), intensity: 0.7 }));
+    res.json(accidentPoints);
   } catch (err) {
-    console.error('Error in accidents endpoint:', err);
+    console.error('Error fetching accident data:', err);
     res.status(500).json({ error: 'Failed to fetch accident data' });
   }
 });
@@ -132,6 +104,7 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`✅ Mile Safe Server running at: http://0.0.0.0:${port}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Health check: http://0.0.0.0:${port}/health`);
+  console.log(`🔍 API endpoint: http://0.0.0.0:${port}/api`);
 });
 
 // Global error handler
