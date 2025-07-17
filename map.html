@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mile Safe | Traffic Accident Heat Map</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet" />
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    #map {
+      width: 100%;
+      height: 500px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <div class="logo">Mile Safe</div>
+      <nav id="nav-links" class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learning Hub</a>
+        <a href="map.html" class="active">Heat Map</a>
+        <a href="sos.html" class="sos-btn">SOS</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html">Sign Up</a>
+      </nav>
+      <div class="menu-toggle" id="menu-toggle">&#9776;</div>
+    </div>
+  </header>
+
+  <!-- Heat Map Hero -->
+  <section class="map-hero">
+    <h1>Traffic Accident Heat Map</h1>
+    <p>Visualize accident hotspots and stay informed to avoid risky areas on your route.</p>
+  </section>
+
+  <!-- Map Container -->
+  <section class="map-container">
+    <div id="map"></div>
+  </section>
+
+  <!-- Legend Section -->
+  <section class="map-legend">
+    <h2>Map Legend</h2>
+    <ul>
+      <li><span class="legend-box low"></span> Low Risk Area</li>
+      <li><span class="legend-box medium"></span> Medium Risk Area</li>
+      <li><span class="legend-box high"></span> High Risk Area</li>
+    </ul>
+  </section>
+
+  <footer class="footer">
+    <p>&copy; 2025 Mile Safe. All rights reserved.</p>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet Heat Plugin -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+  <!-- Heat Map Script -->
+  <script>
+    const map = L.map('map').setView([40.7128, -74.0060], 12); // Default to NYC center
+
+    // OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Loading indicator for location
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'location-loading';
+    loadingDiv.style.position = 'absolute';
+    loadingDiv.style.top = '20px';
+    loadingDiv.style.left = '50%';
+    loadingDiv.style.transform = 'translateX(-50%)';
+    loadingDiv.style.background = '#fff';
+    loadingDiv.style.padding = '8px 16px';
+    loadingDiv.style.borderRadius = '8px';
+    loadingDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+    loadingDiv.style.zIndex = '1000';
+    loadingDiv.innerText = 'Getting your location...';
+    document.body.appendChild(loadingDiv);
+
+    // Show user's current location on the map
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        // Add a marker for the user's location
+        const userMarker = L.marker([userLat, userLng], {
+          title: 'Your Location',
+          icon: L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64113.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+          })
+        }).addTo(map);
+        userMarker.bindPopup('<b>Your Current Location</b>').openPopup();
+        // Center the map on the user's location
+        map.setView([userLat, userLng], 14);
+        loadingDiv.remove();
+      }, function(error) {
+        loadingDiv.innerText = 'Unable to get your location: ' + error.message;
+        setTimeout(() => loadingDiv.remove(), 4000);
+      });
+    } else {
+      loadingDiv.innerText = 'Geolocation is not supported by this browser.';
+      setTimeout(() => loadingDiv.remove(), 4000);
+    }
+
+    // Fetch accident data from backend
+    fetch('/api/accidents')
+      .then(response => response.json())
+      .then(data => {
+        const accidentPoints = data.accidentPoints || [];
+        const lastUpdated = data.lastUpdated;
+        if (accidentPoints.length > 0) {
+          L.heatLayer(accidentPoints.map(p => [p.lat, p.lng, p.intensity]), {
+            radius: 25,
+            blur: 15,
+            maxZoom: 17
+          }).addTo(map);
+        }
+        // Show last updated time
+        const updateDiv = document.createElement('div');
+        updateDiv.id = 'accident-update';
+        updateDiv.style.position = 'absolute';
+        updateDiv.style.bottom = '20px';
+        updateDiv.style.left = '50%';
+        updateDiv.style.transform = 'translateX(-50%)';
+        updateDiv.style.background = '#fff';
+        updateDiv.style.padding = '6px 14px';
+        updateDiv.style.borderRadius = '8px';
+        updateDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        updateDiv.style.zIndex = '1000';
+        updateDiv.style.fontSize = '0.95rem';
+        updateDiv.innerText = 'Accident data last updated: ' + new Date(lastUpdated).toLocaleString();
+        document.body.appendChild(updateDiv);
+        setTimeout(() => updateDiv.remove(), 10000);
+      })
+      .catch(err => {
+        console.warn('Failed to load accident data:', err);
+      });
+  </script>
+
+  <script async
+    src="https://nyyopmb7xfev5wvpu2omywnb.agents.do-ai.run/static/chatbot/widget.js"
+    data-agent-id="e5b3f9f9-623e-11f0-bf8f-4e013e2ddde4"
+    data-chatbot-id="UNl6lu8L296emVdU2JdYTl_fTRnGk8W7"
+    data-name="MileSafe Helper Chatbot"
+    data-primary-color="#031B4E"
+    data-secondary-color="#E5E8ED"
+    data-button-background-color="#0061EB"
+    data-starting-message="Hello! How can I help you today?"
+    data-logo="/static/chatbot/icons/default-agent.svg">
+  </script>
+
+</body>
+</html>

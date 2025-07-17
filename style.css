@@ -1,0 +1,728 @@
+/* -------------------------------
+   Base & Reset
+-------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+  background-color: #f9f9f9;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* -------------------------------
+   Typography
+-------------------------------- */
+.logo,
+h1,
+h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+}
+
+/* -------------------------------
+   Navbar
+-------------------------------- */
+.navbar {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.logo {
+  font-size: 1.8rem;
+  color: #0077cc;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: #444;
+  font-weight: 500;
+  padding: 0.5rem;
+  transition: color 0.3s;
+}
+
+.nav-links a.active,
+.nav-links a:hover {
+  color: #0077cc;
+}
+
+.sos-btn {
+  color: #cc0000;
+  font-weight: bold;
+}
+
+/* Mobile Menu */
+.menu-toggle {
+  display: none;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background: white;
+    flex-direction: column;
+    width: 100%;
+    display: none;
+    padding: 1rem;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+}
+
+/* -------------------------------
+   Hero Section (Homepage)
+-------------------------------- */
+.hero {
+  background: url('images/image\ hero.jpg') no-repeat center center/cover;
+  color: white;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  margin-top: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  background: rgba(0, 0, 0, 0.55);
+  padding: 2.5rem 3rem;
+  border-radius: 12px;
+  max-width: 650px;
+  animation: fadeInUp 1s ease forwards;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.hero-buttons .btn {
+  background: #0077cc;
+  color: white;
+  padding: 0.75rem 1.75rem;
+  border-radius: 30px;
+  margin: 0 0.5rem;
+  transition: all 0.3s ease;
+  display: inline-block;
+  font-weight: 600;
+  box-shadow: 0 6px 12px rgba(0,119,204,0.3);
+  text-align: center;
+}
+
+.hero-buttons .btn.red {
+  background: #cc0000;
+  box-shadow: 0 6px 12px rgba(204,0,0,0.3);
+}
+
+.hero-buttons .btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0,119,204,0.5);
+}
+
+.hero-buttons .btn.red:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(204,0,0,0.5);
+}
+
+/* -------------------------------
+   Features Section (Homepage)
+-------------------------------- */
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  padding: 4rem 1rem;
+  background: #fff;
+}
+
+.feature-card {
+  background: #f2f7fb;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  width: 300px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 10px 20px rgba(0, 119, 204, 0.3);
+  transform: translateY(-8px);
+}
+
+.feature-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-card p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #444;
+}
+
+.feature-link {
+  color: #0077cc;
+  font-weight: 600;
+  display: inline-block;
+  transition: color 0.3s ease;
+}
+
+.feature-link.red {
+  color: #cc0000;
+}
+
+.feature-link:hover {
+  text-decoration: underline;
+}
+
+/* Adding emoji icon before each feature title */
+.feature-card h2::before {
+  content: attr(data-icon);
+  margin-right: 0.5rem;
+  font-size: 1.3rem;
+  vertical-align: middle;
+}
+
+/* -------------------------------
+   Testimonials Section (Homepage)
+-------------------------------- */
+.testimonials {
+  background: #f4faff;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.testimonials h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  color: #0077cc;
+}
+
+.testimonial-cards {
+  max-width: 900px;
+  margin: auto;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.testimonial {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  width: 280px;
+  font-style: italic;
+  color: #555;
+  position: relative;
+  font-size: 1rem;
+}
+
+.testimonial p {
+  margin-bottom: 1.5rem;
+}
+
+.testimonial cite {
+  font-weight: 700;
+  color: #0077cc;
+  font-style: normal;
+  position: absolute;
+  bottom: 1rem;
+  right: 1.5rem;
+}
+
+/* -------------------------------
+   Learning Hub Hero
+-------------------------------- */
+.learn-hero {
+  background: #0077cc;
+  color: white;
+  padding: 5rem 1rem 3rem;
+  text-align: center;
+  margin-top: 60px;
+  font-family: 'Montserrat', sans-serif;
+  animation: fadeInUp 1s ease forwards;
+}
+
+.learn-hero h1 {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.learn-hero p {
+  font-size: 1.3rem;
+  max-width: 600px;
+  margin: auto;
+  font-weight: 500;
+}
+
+/* -------------------------------
+   Categories Section (Learning Hub)
+-------------------------------- */
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem;
+  padding: 3rem 1rem 5rem;
+  background: #f4faff;
+}
+
+.category-card {
+  background: linear-gradient(135deg, #e5e8ed 60%, #fff 100%);
+  border-left: 6px solid #0077cc;
+  padding: 2.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,119,204,0.08);
+  width: 340px;
+  text-align: left;
+  font-family: 'Roboto', sans-serif;
+  color: #031B4E;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.8s forwards;
+}
+
+.category-card:hover {
+  box-shadow: 0 16px 32px rgba(0, 119, 204, 0.18);
+  transform: translateY(-10px) scale(1.03);
+  border-left: 6px solid #0061EB;
+}
+
+.category-card h2 {
+  font-size: 1.7rem;
+  margin-bottom: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #0077cc;
+}
+
+.category-card p {
+  font-size: 1.08rem;
+  margin-bottom: 1.8rem;
+  color: #031B4E;
+  font-weight: 400;
+}
+
+.category-card .btn {
+  background: #0061EB;
+  color: #fff;
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: inline-block;
+  transition: background 0.3s, box-shadow 0.3s;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,97,235,0.12);
+}
+
+.category-card .btn:hover {
+  background: #031B4E;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0,49,190,0.18);
+}
+
+/* -------------------------------
+   SOS Page Styles - Improved
+-------------------------------- */
+.sos-section {
+  margin-top: 60px;
+  padding: 4rem 1rem;
+  background: #ffe6e6;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #cc0000;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.sos-section h1 {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 10px #cc0000;
+}
+
+.sos-section p {
+  max-width: 600px;
+  margin: 0 auto 2rem auto;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #990000;
+}
+
+#sos-btn {
+  background: #cc0000;
+  color: white;
+  font-size: 5rem;
+  font-weight: 900;
+  border: none;
+  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+  cursor: pointer;
+  box-shadow: 0 0 30px #cc0000;
+  transition: background 0.3s, box-shadow 0.3s;
+  animation: pulse 2s infinite;
+  user-select: none;
+}
+
+#sos-btn:disabled {
+  background: #a33;
+  cursor: wait;
+  box-shadow: none;
+  animation: none;
+}
+
+#sos-btn:hover:not(:disabled),
+#sos-btn:focus:not(:disabled) {
+  background: #ff3333;
+  outline: none;
+  box-shadow: 0 0 40px #ff3333;
+}
+
+#status-message {
+  margin-top: 2.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #660000;
+  min-height: 2em;
+}
+
+/* Pulsate animation for SOS button */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 20px #cc0000;
+  }
+  50% {
+    box-shadow: 0 0 40px #ff3333;
+  }
+  100% {
+    box-shadow: 0 0 20px #cc0000;
+  }
+}
+
+/* -------------------------------
+   Heat Map Hero Section
+-------------------------------- */
+.map-hero {
+  background: #0077cc;
+  color: white;
+  padding: 5rem 1rem 3rem;
+  text-align: center;
+  margin-top: 60px;
+  font-family: 'Montserrat', sans-serif;
+  animation: fadeInUp 1s ease forwards;
+}
+
+.map-hero h1 {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.map-hero p {
+  font-size: 1.3rem;
+  max-width: 650px;
+  margin: auto;
+  font-weight: 500;
+}
+
+/* -------------------------------
+   Map Container
+-------------------------------- */
+.map-container {
+  max-width: 1000px;
+  margin: 2rem auto 3rem;
+  padding: 0 1rem;
+  height: 500px;
+  background: #f4faff;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#map-placeholder {
+  font-family: 'Roboto', sans-serif;
+  color: #555;
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* -------------------------------
+   Legend Section
+-------------------------------- */
+.map-legend {
+  max-width: 400px;
+  margin: 0 auto 4rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+}
+
+.map-legend h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #0077cc;
+  text-align: center;
+}
+
+.map-legend ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin-right: 1rem;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.legend-box.low {
+  background: #a8d5a3; /* green */
+}
+
+.legend-box.medium {
+  background: #f4d35e; /* yellow */
+}
+
+.legend-box.high {
+  background: #e36414; /* orange/red */
+}
+
+/* -------------------------------
+   Footer
+-------------------------------- */
+.footer {
+  text-align: center;
+  padding: 1rem;
+  background: #0077cc;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.footer a {
+  color: #bbe1fa;
+  margin: 0 0.5rem;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------
+   Animations
+-------------------------------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .features,
+  .categories {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .testimonial-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .map-container {
+    height: 350px;
+    width: 90%;
+  }
+
+  .map-legend {
+    width: 90%;
+  }
+
+  .sos-section h1 {
+    font-size: 3rem;
+  }
+
+  #sos-btn {
+    font-size: 4rem;
+    width: 140px;
+    height: 140px;
+  }
+
+  .sos-section p {
+    font-size: 1.1rem;
+  }
+}
+
+/* -------------------------------
+   Login and Signup Page Styles
+-------------------------------- */
+.login-container,
+.signup-container {
+  max-width: 400px;
+  margin: 100px auto 50px auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  font-family: 'Roboto', sans-serif;
+}
+
+.login-container h2,
+.signup-container h2 {
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #0077cc;
+}
+
+.login-container form,
+.signup-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-container label,
+.signup-container label {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.login-container input,
+.signup-container input {
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.login-container input:focus,
+.signup-container input:focus {
+  border-color: #0077cc;
+  outline: none;
+}
+
+.login-container button,
+.signup-container button {
+  background: #0077cc;
+  color: white;
+  font-weight: 700;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.login-container button:hover,
+.signup-container button:hover {
+  background: #005fa3;
+}
+
+.login-error,
+.signup-error {
+  color: #cc0000;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+  display: none;
+}
+
+/* Responsive tweaks for login/signup */
+@media (max-width: 480px) {
+  .login-container,
+  .signup-container {
+    margin: 80px 1rem 50px 1rem;
+    padding: 1.5rem;
+  }
+}
+

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mile Safe | Emergency SOS</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <div class="logo">Mile Safe</div>
+      <nav id="nav-links" class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learning Hub</a>
+        <a href="map.html">Heat Map</a>
+        <a href="sos.html" class="sos-btn active">SOS</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html">Sign Up</a>
+      </nav>
+      <div class="menu-toggle" id="menu-toggle">&#9776;</div>
+    </div>
+  </header>
+
+  <section class="sos-section" role="main" aria-label="Emergency SOS section">
+    <h1>EMERGENCY SOS</h1>
+    <p>If you are in immediate danger or need urgent help, press the button below.</p>
+
+    <button id="sos-btn" aria-live="polite" aria-pressed="false" aria-label="Send emergency SOS alert">
+      SOS
+    </button>
+
+    <p id="status-message" aria-live="assertive" role="alert"></p>
+  </section>
+
+  <footer class="footer">
+    <p>&copy; 2025 Mile Safe. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const sosBtn = document.getElementById('sos-btn');
+    const statusMessage = document.getElementById('status-message');
+
+    sosBtn.addEventListener('click', () => {
+      sosBtn.disabled = true;
+      sosBtn.setAttribute('aria-pressed', 'true');
+      statusMessage.textContent = 'Sending SOS alert...';
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const alertData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            timestamp: new Date().toISOString()
+          };
+          fetch('/api/sos-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(alertData)
+          })
+          .then(res => res.json())
+          .then(data => {
+            statusMessage.textContent = 'SOS alert sent successfully! Help is on the way.';
+            sosBtn.disabled = false;
+            sosBtn.setAttribute('aria-pressed', 'false');
+          })
+          .catch(err => {
+            statusMessage.textContent = 'Failed to send SOS alert. Please try again.';
+            sosBtn.disabled = false;
+            sosBtn.setAttribute('aria-pressed', 'false');
+          });
+        }, function(error) {
+          statusMessage.textContent = 'Unable to get your location. Please enable location services.';
+          sosBtn.disabled = false;
+          sosBtn.setAttribute('aria-pressed', 'false');
+        });
+      } else {
+        statusMessage.textContent = 'Geolocation is not supported by your browser.';
+        sosBtn.disabled = false;
+        sosBtn.setAttribute('aria-pressed', 'false');
+      }
+    });
+  </script>
+
+  <script async
+    src="https://nyyopmb7xfev5wvpu2omywnb.agents.do-ai.run/static/chatbot/widget.js"
+    data-agent-id="e5b3f9f9-623e-11f0-bf8f-4e013e2ddde4"
+    data-chatbot-id="UNl6lu8L296emVdU2JdYTl_fTRnGk8W7"
+    data-name="MileSafe Helper Chatbot"
+    data-primary-color="#031B4E"
+    data-secondary-color="#E5E8ED"
+    data-button-background-color="#0061EB"
+    data-starting-message="Hello! How can I help you today?"
+    data-logo="/static/chatbot/icons/default-agent.svg">
+  </script>
+</body>
+</html>

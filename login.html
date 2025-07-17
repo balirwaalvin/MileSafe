@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mile Safe | Login</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <div class="logo">Mile Safe</div>
+      <nav id="nav-links" class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learning Hub</a>
+        <a href="map.html">Heat Map</a>
+        <a href="sos.html">SOS</a>
+        <a href="login.html" class="active">Login</a>
+        <a href="signup.html">Sign Up</a>
+      </nav>
+      <div class="menu-toggle" id="menu-toggle">&#9776;</div>
+    </div>
+  </header>
+
+  <main class="login-container" role="main" aria-label="User login form">
+    <h2>Login to Mile Safe</h2>
+
+    <form id="login-form" novalidate>
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" required autocomplete="email" />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password" />
+
+      <button type="submit">Login</button>
+      <p class="login-error" id="login-error" role="alert" aria-live="assertive"></p>
+    </form>
+
+    <p style="margin-top: 1rem; text-align: center;">
+      Don't have an account? <a href="signup.html">Sign Up</a>
+    </p>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 Mile Safe. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const errorMsg = document.getElementById('login-error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+
+      const email = form.email.value.trim();
+      const password = form.password.value.trim();
+
+      if (!email || !password) {
+        errorMsg.textContent = 'Please enter both email and password.';
+        errorMsg.style.color = 'red';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          errorMsg.style.color = 'green';
+          errorMsg.textContent = 'Login successful! Redirecting...';
+          localStorage.setItem('token', data.token);
+
+          // Redirect after 1.5 seconds
+          setTimeout(() => {
+            if (data.role === 'admin') {
+              window.location.href = 'admin-dashboard.html';
+            } else {
+              window.location.href = 'index.html';
+            }
+          }, 1500);
+        } else {
+          errorMsg.style.color = 'red';
+          errorMsg.textContent = data.message;
+          errorMsg.style.display = 'block';
+        }
+      } catch (err) {
+        console.error(err);
+        errorMsg.style.color = 'red';
+        errorMsg.textContent = 'Network error. Could not connect to backend.';
+        errorMsg.style.display = 'block';
+      }
+    });
+
+    // Mobile menu toggle
+    const menuToggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+
+  <script async
+    src="https://nyyopmb7xfev5wvpu2omywnb.agents.do-ai.run/static/chatbot/widget.js"
+    data-agent-id="e5b3f9f9-623e-11f0-bf8f-4e013e2ddde4"
+    data-chatbot-id="UNl6lu8L296emVdU2JdYTl_fTRnGk8W7"
+    data-name="MileSafe Helper Chatbot"
+    data-primary-color="#031B4E"
+    data-secondary-color="#E5E8ED"
+    data-button-background-color="#0061EB"
+    data-starting-message="Hello! How can I help you today?"
+    data-logo="/static/chatbot/icons/default-agent.svg">
+  </script>
+</body>
+</html>
+
+

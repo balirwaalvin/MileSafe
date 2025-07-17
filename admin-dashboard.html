@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mile Safe | Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: #e5e8ed; color: #031B4E; }
+    .dashboard-section { max-width: 900px; margin: 2.5rem auto; background: #fff; border-radius: 18px; box-shadow: 0 12px 32px rgba(0,119,204,0.10); padding: 2.5rem 2rem; }
+    h1 { color: #0077cc; text-align: center; margin-bottom: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+    th, td { padding: 0.8rem; border-bottom: 1px solid #e5e8ed; text-align: left; }
+    th { background: #031B4E; color: #fff; }
+    .resolved { color: #0077cc; font-weight: bold; }
+    .unresolved { color: #cc0000; font-weight: bold; }
+    .resolve-btn { background: #0061EB; color: #fff; border: none; border-radius: 20px; padding: 0.4rem 1.2rem; cursor: pointer; font-weight: 600; }
+    .resolve-btn:hover { background: #031B4E; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="container">
+      <div class="logo">Mile Safe Admin</div>
+      <nav id="nav-links" class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="admin-dashboard.html" class="active">Admin Dashboard</a>
+      </nav>
+      <div class="menu-toggle" id="menu-toggle">&#9776;</div>
+    </div>
+  </header>
+  <section class="dashboard-section">
+    <h1>SOS Alerts Dashboard</h1>
+    <table id="alerts-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Status</th>
+          <th>Action</th>
+          <th>Map</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Alerts will be loaded here -->
+      </tbody>
+    </table>
+  </section>
+  <footer class="footer">
+    <p>&copy; 2025 Mile Safe. All rights reserved.</p>
+  </footer>
+  <audio id="alert-audio" src="images/alarm.mp3.mp3" preload="auto"></audio>
+  <script>
+    let previousUnresolvedCount = 0;
+    let alarmPlayed = false;
+    function loadAlerts() {
+      fetch('/api/sos-alerts')
+        .then(res => res.json())
+        .then(alerts => {
+          const tbody = document.querySelector('#alerts-table tbody');
+          tbody.innerHTML = '';
+          let unresolvedCount = 0;
+          alerts.forEach(alert => {
+            if (!alert.resolved) unresolvedCount++;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${new Date(alert.timestamp).toLocaleString()}</td>
+              <td>${alert.latitude}</td>
+              <td>${alert.longitude}</td>
+              <td class="${alert.resolved ? 'resolved' : 'unresolved'}">${alert.resolved ? 'Resolved' : 'Unresolved'}</td>
+              <td>
+                ${!alert.resolved ? `<button class="resolve-btn" onclick="resolveAlert('${alert.id}')">Mark as Resolved</button>` : ''}
+              </td>
+              <td>
+                <button class="resolve-btn" onclick="viewOnMap(${alert.latitude},${alert.longitude})">View Location</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+          // Play sound if new unresolved alert is detected
+          if (unresolvedCount > previousUnresolvedCount && !alarmPlayed) {
+            const audio = document.getElementById('alert-audio');
+            audio.currentTime = 0;
+            audio.play();
+            alarmPlayed = true;
+          }
+          // Stop alarm if admin logs in (page loads)
+          if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_RELOAD) {
+            const audio = document.getElementById('alert-audio');
+            audio.pause();
+            audio.currentTime = 0;
+            alarmPlayed = false;
+          }
+          previousUnresolvedCount = unresolvedCount;
+        });
+    }
+    function resolveAlert(id) {
+      fetch(`/api/sos-alerts/${id}/resolve`, { method: 'POST' })
+        .then(() => {
+          const audio = document.getElementById('alert-audio');
+          audio.pause();
+          audio.currentTime = 0;
+          alarmPlayed = false;
+          loadAlerts();
+        });
+    }
+    function viewOnMap(lat, lng) {
+      window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+    }
+    window.onload = () => {
+      const audio = document.getElementById('alert-audio');
+      audio.pause();
+      audio.currentTime = 0;
+      alarmPlayed = false;
+      loadAlerts();
+    };
+    setInterval(loadAlerts, 5000); // Poll every 5 seconds for new alerts
+  </script>
+</body>
+</html>
