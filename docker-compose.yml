@@ -26,6 +26,7 @@ services:
     container_name: milesafe-backend
     ports:
       - "3000:3000"
+      - "8080:3000"  # Map 8080 to 3000 for health checks
     environment:
       - NODE_ENV=production
       - PORT=3000
