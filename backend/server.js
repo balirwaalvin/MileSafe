@@ -26,9 +26,49 @@ app.use(express.json({ limit: '10mb' }));       // Parse incoming JSON requests
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded data
 
 // Serve static files from the root directory (for frontend)
-if (isDevelopment) {
-  app.use(express.static(path.join(__dirname, '..')));
-}
+const frontendPath = process.env.NODE_ENV === 'production' 
+  ? path.join(__dirname, 'frontend') 
+  : path.join(__dirname, '..');
+
+app.use(express.static(frontendPath));
+
+console.log(`📁 Serving static files from: ${frontendPath}`);
+
+// Root route handler
+app.get('/', (req, res) => {
+  const indexPath = path.join(frontendPath, 'index.html');
+  console.log(`📄 Serving index.html from: ${indexPath}`);
+  
+  // Check if file exists
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error(`❌ index.html not found at: ${indexPath}`);
+    res.status(404).send(`
+      <h1>Mile Safe - Setup Required</h1>
+      <p>Frontend files not found. Expected at: ${indexPath}</p>
+      <p>Please check your deployment configuration.</p>
+      <a href="/health">Health Check</a>
+    `);
+  }
+});
+
+// Serve index.html for all non-API routes (SPA support)
+app.get('*', (req, res, next) => {
+  // Skip API routes and health checks
+  if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
+    return next();
+  }
+  // Serve index.html for all other routes
+  const indexPath = path.join(frontendPath, 'index.html');
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend files not found');
+  }
+});
 
 // Security middleware for production
 if (!isDevelopment) {

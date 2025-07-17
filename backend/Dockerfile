@@ -4,14 +4,23 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy backend package files
+COPY backend/package*.json ./
 
 # Install dependencies
 RUN npm ci --only=production
 
-# Copy application code
-COPY . .
+# Copy backend application code
+COPY backend/ ./
+
+# Copy frontend files to frontend directory
+COPY *.html ./frontend/
+COPY *.css ./frontend/
+COPY *.js ./frontend/
+COPY images/ ./frontend/images/
+
+# List files for debugging
+RUN ls -la ./frontend/
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
