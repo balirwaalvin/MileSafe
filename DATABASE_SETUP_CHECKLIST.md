@@ -7,6 +7,7 @@
 - [ ] Click "Create a resource"
 - [ ] Search for "Azure Database for MySQL flexible server"
 - [ ] Click "Create"
+- [ ] **IMPORTANT:** Choose "Flexible server" (NOT "WordPress + MySQL Flexible server")
 
 ### Step 2: Configure Database Server
 - [ ] **Subscription:** Your student subscription
@@ -16,8 +17,10 @@
 - [ ] **MySQL version:** 8.0
 - [ ] **Workload type:** Development
 - [ ] **Compute + Storage:** Burstable, B1ms (1 vCore, 2GB RAM)
-- [ ] **Admin username:** `milesafe_admin`
+- [ ] **Admin username:** `milesafeadmin` (NO underscores, special chars, or reserved words)
 - [ ] **Password:** [Create strong password and SAVE IT!]
+  - Must be 8-128 characters
+  - Must contain characters from 3 categories: uppercase, lowercase, numbers, special chars
 
 ### Step 3: Configure Networking
 - [ ] **Connectivity method:** Public access (selected IP addresses)
@@ -38,7 +41,7 @@
 **Option A: Using Azure Cloud Shell**
 - [ ] In Azure Portal, click Cloud Shell icon (top right)
 - [ ] Choose "Bash"
-- [ ] Run: `mysql -h milesafe-mysql.mysql.database.azure.com -u milesafe_admin -p`
+- [ ] Run: `mysql -h milesafe-mysql.mysql.database.azure.com -u milesafeadmin -p`
 - [ ] Enter your password
 - [ ] Run this SQL:
   ```sql
@@ -56,7 +59,7 @@
 **Option B: Using MySQL Workbench (if you have it)**
 - [ ] Download MySQL Workbench
 - [ ] Connect using: `milesafe-mysql.mysql.database.azure.com:3306`
-- [ ] Username: `milesafe_admin`
+- [ ] Username: `milesafeadmin`
 - [ ] Password: [Your password]
 - [ ] Run the CREATE TABLE SQL above
 
@@ -67,7 +70,7 @@
 - [ ] Update these values:
   ```
   DB_HOST = milesafe-mysql.mysql.database.azure.com
-  DB_USER = milesafe_admin
+  DB_USER = milesafeadmin
   DB_PASS = [Your MySQL password]
   DB_NAME = milesafe
   DB_PORT = 3306
@@ -108,10 +111,10 @@ Make sure these are set in Azure Portal → Configuration:
 ✅ SCM_DO_BUILD_DURING_DEPLOYMENT = true
 ✅ JWT_SECRET = MileSafe2024SuperSecureJWTSecretKeyForProduction32Chars
 
-✅ DB_HOST = [PlanetScale Host]
-✅ DB_USER = [PlanetScale Username]
-✅ DB_PASS = [PlanetScale Password]
-✅ DB_NAME = milesafe-db
+✅ DB_HOST = milesafe-mysql.mysql.database.azure.com
+✅ DB_USER = milesafeadmin
+✅ DB_PASS = [Your MySQL password]
+✅ DB_NAME = milesafe
 ✅ DB_PORT = 3306
 ✅ ENABLE_DATABASE = true
 ✅ ENABLE_MOCK_MODE = false
