@@ -1,8 +1,78 @@
 # Database Setup Checklist for Mile Safe
 
-## ✅ Recommended: Azure Database for MySQL (Free with Student Credits)
+## 🚨 **Azure Database Issues? Use Supabase Instead!**
 
-### Step 1: Create Azure Database for MySQL
+**Azure Database for MySQL is having deployment issues. Let's use Supabase instead - it's actually better:**
+- ✅ **5-minute setup** vs 30+ minutes for Azure
+- ✅ **No deployment failures** - works every time
+- ✅ **100% free** - no student credits needed
+- ✅ **Better features** - built-in auth, real-time, APIs
+- ✅ **More reliable** - rarely has outages
+
+## 🚀 **Recommended: Supabase (Free PostgreSQL)**
+
+### Step 1: Create Supabase Account
+- [ ] Go to [Supabase.com](https://supabase.com)
+- [ ] Click "Start your project"
+- [ ] Sign up with GitHub (fastest)
+- [ ] Verify your email
+
+### Step 2: Create New Project
+- [ ] Click "New project"
+- [ ] **Organization:** Personal (default)
+- [ ] **Name:** `mile-safe`
+- [ ] **Database Password:** Create strong password and **SAVE IT!**
+- [ ] **Region:** Choose closest to your Azure region (e.g., East US)
+- [ ] Click "Create new project"
+- [ ] Wait 2-3 minutes for setup
+
+### Step 3: Create Users Table
+- [ ] Go to **SQL Editor** in the left menu
+- [ ] Click "New query"
+- [ ] Paste this SQL:
+  ```sql
+  CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+  ```
+- [ ] Click "Run" (or press Ctrl+Enter)
+- [ ] Should see "Success. No rows returned"
+
+### Step 4: Get Connection Details
+- [ ] Go to **Settings** → **Database** in the left menu
+- [ ] Copy these values:
+  ```
+  Host: _______________
+  Database name: postgres
+  Username: postgres
+  Password: [Your password from Step 2]
+  Port: 5432
+  ```
+
+### Step 5: Update Your Azure App Service
+- [ ] Go to Azure Portal
+- [ ] Find your App Service
+- [ ] Click "Configuration" → "Application settings"
+- [ ] Update these environment variables:
+  ```
+  DB_HOST = [Supabase Host from Step 4]
+  DB_USER = postgres
+  DB_PASS = [Your Supabase password]
+  DB_NAME = postgres
+  DB_PORT = 5432
+  ENABLE_DATABASE = true
+  ENABLE_MOCK_MODE = false
+  ```
+- [ ] Click "Save"
+- [ ] **IMPORTANT:** Click "Restart" to restart your app
+
+### Step 6: Update Backend Code for PostgreSQL
+Since Supabase uses PostgreSQL, we need to update your backend:
 - [ ] Go to [Azure Portal](https://portal.azure.com)
 - [ ] Click "Create a resource"
 - [ ] Search for "Azure Database for MySQL flexible server"
@@ -12,7 +82,7 @@
 ### Step 2: Configure Database Server
 - [ ] **Subscription:** Your student subscription
 - [ ] **Resource Group:** `milesafe-rg` (same as your app)
-- [ ] **Server name:** `milesafe-mysql` (must be globally unique)
+- [ ] **Server name:** `milesafe-mysql` (must be globally unique - try `milesafe-mysql-[your-initials]`)
 - [ ] **Region:** Same as your App Service (e.g., East US)
 - [ ] **MySQL version:** 8.0
 - [ ] **Workload type:** Development
@@ -21,6 +91,21 @@
 - [ ] **Password:** [Create strong password and SAVE IT!]
   - Must be 8-128 characters
   - Must contain characters from 3 categories: uppercase, lowercase, numbers, special chars
+
+### 🔧 **If Database Creation Fails:**
+
+**Common Solutions:**
+1. **Try a different server name:** `milesafe-mysql-yourname` or `milesafe-db-001`
+2. **Try a different region:** West US 2, Central US, etc.
+3. **Check your Azure subscription limits** in Azure Portal → Subscriptions → Usage + quotas
+4. **Wait 10-15 minutes** and try again (Azure resource limitations)
+
+**Alternative Quick Setup:**
+If Azure Database keeps failing, you can use **Azure Container Instances** with MySQL:
+- Go to Azure Portal → Create "Container Instances"
+- Use image: `mysql:8.0`
+- Set environment variables for MySQL setup
+- Much faster and simpler for development
 
 ### Step 3: Configure Networking
 - [ ] **Connectivity method:** Public access (selected IP addresses)
@@ -138,3 +223,52 @@ Common issues:
 4. **"Environment variable not found"** → Check Azure Configuration
 
 Your app will automatically switch from mock mode to real database mode once the connection works!
+
+---
+
+## 🚀 **Plan B: Supabase (Free PostgreSQL) - If Azure Database Fails**
+
+**Quick 5-minute setup:**
+
+### Step 1: Create Supabase Account
+- [ ] Go to [Supabase.com](https://supabase.com)
+- [ ] Sign up with GitHub
+- [ ] Create new project: `mile-safe`
+- [ ] Choose region closest to your Azure app
+- [ ] Set database password (save it!)
+
+### Step 2: Create Users Table
+- [ ] Go to SQL Editor in Supabase
+- [ ] Run this SQL:
+  ```sql
+  CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+  ```
+
+### Step 3: Get Connection Details
+- [ ] Go to Settings → Database
+- [ ] Copy connection details
+
+### Step 4: Update Your App Service
+- [ ] In Azure Portal → App Service → Configuration
+- [ ] Update these environment variables:
+  ```
+  DB_HOST = [Supabase host]
+  DB_USER = postgres
+  DB_PASS = [Your Supabase password]
+  DB_NAME = postgres
+  DB_PORT = 5432
+  ENABLE_DATABASE = true
+  ENABLE_MOCK_MODE = false
+  ```
+- [ ] Restart your app
+
+**Note:** You'll need to update your backend code to use PostgreSQL instead of MySQL, but Supabase is much more reliable than Azure Database setup.
+
+---

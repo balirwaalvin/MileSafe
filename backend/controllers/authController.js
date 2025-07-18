@@ -4,8 +4,18 @@ require('dotenv').config();
 
 // Try to import database pool, fallback if not available
 let pool;
+let isPostgreSQL = false;
 try {
-  pool = require('../db');
+  // Try PostgreSQL first (for Supabase)
+  if (process.env.DB_PORT === '5432') {
+    pool = require('../db-postgres');
+    isPostgreSQL = true;
+    console.log('Using PostgreSQL/Supabase database');
+  } else {
+    // Fallback to MySQL
+    pool = require('../db');
+    console.log('Using MySQL database');
+  }
 } catch (err) {
   console.warn('⚠️ Database connection not available, using mock auth');
   pool = null;
@@ -28,7 +38,17 @@ const signup = async (req, res) => {
       });
     }
 
-    const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    let existingUser;
+    if (isPostgreSQL) {
+      // PostgreSQL query (for Supabase)
+      const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      existingUser = result.rows;
+    } else {
+      // MySQL query
+      const [userRows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      existingUser = userRows;
+    }
+    
     if (existingUser.length > 0) {
       return res.status(400).json({ message: 'Email already registered.' });
     }
@@ -36,10 +56,20 @@ const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const userRole = role && role === 'admin' ? 'admin' : 'user';
 
-    await pool.query(
-      'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-      [username, email, hashedPassword, userRole]
-    );
+    if (isPostgreSQL) {
+      // PostgreSQL query (for Supabase)
+      const result = await pool.query(
+        'INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id',
+        [username, email, hashedPassword, userRole]
+      );
+      console.log('User created with ID:', result.rows[0].id);
+    } else {
+      // MySQL query
+      await pool.query(
+        'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
+        [username, email, hashedPassword, userRole]
+      );
+    }
 
     res.status(201).json({ message: 'User registered successfully.' });
   } catch (error) {
@@ -80,7 +110,16 @@ const login = async (req, res) => {
       }
     }
 
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    let users;
+    if (isPostgreSQL) {
+      // PostgreSQL query (for Supabase)
+      const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      users = result.rows;
+    } else {
+      // MySQL query
+      const [userRows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      users = userRows;
+    }
     if (users.length === 0) {
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
