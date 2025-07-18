@@ -1,21 +1,38 @@
 // Import dependencies
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth');
 const path = require('path');
 const fetch = require('node-fetch');
 require('dotenv').config();
 
+// Try to import auth routes, create fallback if not found
+let authRoutes;
+try {
+  authRoutes = require('./routes/auth');
+} catch (err) {
+  console.warn('⚠️ Auth routes not found, creating basic fallback');
+  authRoutes = express.Router();
+  authRoutes.post('/login', (req, res) => {
+    res.json({ success: false, message: 'Auth system not configured' });
+  });
+  authRoutes.post('/register', (req, res) => {
+    res.json({ success: false, message: 'Auth system not configured' });
+  });
+}
+
 // Initialize express app
 const app = express();
-const port = process.env.PORT || 8080; // Changed default to 8080 for deployment platform
+const port = parseInt(process.env.PORT) || 8080; // Ensure port is a number
 const isDevelopment = process.env.NODE_ENV !== 'production';
+
+console.log(`🚀 Starting Mile Safe server on port ${port}`);
+console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 
 // CORS configuration
 const corsOptions = {
   origin: isDevelopment 
-    ? ['http://localhost:3000', 'http://127.0.0.1:3000'] 
-    : [process.env.FRONTEND_URL || '*'],
+    ? ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080'] 
+    : true, // Allow all origins in production for now
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -51,22 +68,6 @@ app.get('/', (req, res) => {
       <p>Please check your deployment configuration.</p>
       <a href="/health">Health Check</a>
     `);
-  }
-});
-
-// Serve index.html for all non-API routes (SPA support)
-app.get('*', (req, res, next) => {
-  // Skip API routes and health checks
-  if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
-    return next();
-  }
-  // Serve index.html for all other routes
-  const indexPath = path.join(frontendPath, 'index.html');
-  const fs = require('fs');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Frontend files not found');
   }
 });
 
@@ -139,12 +140,40 @@ app.get('/api/accidents', async (req, res) => {
   }
 });
 
+// Serve index.html for all non-API routes (SPA support) - MUST BE LAST
+app.get('*', (req, res) => {
+  // Skip API routes and health checks
+  if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  // Serve index.html for all other routes
+  const indexPath = path.join(frontendPath, 'index.html');
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend files not found');
+  }
+});
+
 // Server listener
-app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`✅ Mile Safe Server running at: http://0.0.0.0:${port}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Health check: http://0.0.0.0:${port}/health`);
   console.log(`🔍 API endpoint: http://0.0.0.0:${port}/api`);
+  console.log(`📁 Frontend path: ${frontendPath}`);
+});
+
+// Handle server startup errors
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${port} is already in use`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', err);
+    process.exit(1);
+  }
 });
 
 // Global error handler
@@ -170,10 +199,16 @@ process.on('uncaughtException', (error) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received. Shutting down gracefully...');
-  process.exit(0);
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
 
 process.on('SIGINT', () => {
   console.log('SIGINT received. Shutting down gracefully...');
-  process.exit(0);
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
