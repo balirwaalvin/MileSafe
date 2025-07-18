@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mile Safe - Debug Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #0061EB; color: white; padding: 10px 15px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0051cc; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; white-space: pre-wrap; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Mile Safe Debug Page</h1>
+    
+    <div class="section">
+        <h3>1. Check System Status</h3>
+        <button onclick="checkHealth()">Check Health</button>
+        <button onclick="checkJWT()">Check JWT Config</button>
+        <button onclick="checkUsers()">Check Users</button>
+        <div id="status-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>2. Create Test User</h3>
+        <button onclick="createTestUser()">Create Test User</button>
+        <div id="create-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>3. Test Login</h3>
+        <div>
+            <input type="email" id="test-email" placeholder="Email" value="test@milesafe.com">
+            <input type="password" id="test-password" placeholder="Password" value="test123">
+            <button onclick="testLogin()">Test Login</button>
+        </div>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <script>
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                document.getElementById('status-result').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('status-result').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function checkJWT() {
+            try {
+                const response = await fetch('/debug/jwt');
+                const data = await response.json();
+                document.getElementById('status-result').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('status-result').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function checkUsers() {
+            try {
+                const response = await fetch('/debug/users');
+                const data = await response.json();
+                document.getElementById('status-result').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('status-result').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function createTestUser() {
+            try {
+                const response = await fetch('/debug/create-test-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                document.getElementById('create-result').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('create-result').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            try {
+                console.log('🔍 Testing login with:', { email, password });
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                console.log('🔍 Response status:', response.status);
+                console.log('🔍 Response headers:', Object.fromEntries(response.headers.entries()));
+
+                const data = await response.json();
+                console.log('🔍 Response data:', data);
+
+                document.getElementById('login-result').textContent = JSON.stringify({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                }, null, 2);
+
+            } catch (err) {
+                console.error('❌ Login test error:', err);
+                document.getElementById('login-result').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        // Auto-run basic checks on page load
+        window.onload = function() {
+            checkHealth();
+        };
+    </script>
+</body>
+</html>
