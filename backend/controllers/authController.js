@@ -1,7 +1,15 @@
-const pool = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
+// Try to import database pool, fallback if not available
+let pool;
+try {
+  pool = require('../db');
+} catch (err) {
+  console.warn('⚠️ Database connection not available, using mock auth');
+  pool = null;
+}
 
 const signup = async (req, res) => {
   const { username, email, password, role } = req.body;
@@ -11,6 +19,15 @@ const signup = async (req, res) => {
   }
 
   try {
+    // If database is not available, provide mock response
+    if (!pool) {
+      console.log('🔄 Mock signup for:', { username, email, role });
+      return res.status(201).json({ 
+        message: 'User registered successfully (mock mode).',
+        note: 'Database not configured - this is a demo response'
+      });
+    }
+
     const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     if (existingUser.length > 0) {
       return res.status(400).json({ message: 'Email already registered.' });
@@ -26,8 +43,11 @@ const signup = async (req, res) => {
 
     res.status(201).json({ message: 'User registered successfully.' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during signup.' });
+    console.error('Signup error:', error);
+    res.status(500).json({ 
+      message: 'Server error during signup.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -39,6 +59,27 @@ const login = async (req, res) => {
   }
 
   try {
+    // If database is not available, provide mock response
+    if (!pool) {
+      console.log('🔄 Mock login for:', { email });
+      // Simple mock validation
+      if (email.includes('@') && password.length > 3) {
+        const mockToken = jwt.sign(
+          { id: 1, email: email, role: 'user' },
+          process.env.JWT_SECRET || 'fallback-secret-key',
+          { expiresIn: '1h' }
+        );
+        return res.json({ 
+          message: 'Login successful (mock mode).', 
+          token: mockToken, 
+          role: 'user',
+          note: 'Database not configured - this is a demo response'
+        });
+      } else {
+        return res.status(400).json({ message: 'Invalid email or password.' });
+      }
+    }
+
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     if (users.length === 0) {
       return res.status(400).json({ message: 'Invalid email or password.' });
@@ -58,8 +99,11 @@ const login = async (req, res) => {
 
     res.json({ message: 'Login successful.', token, role: user.role });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during login.' });
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      message: 'Server error during login.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

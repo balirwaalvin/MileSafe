@@ -22,11 +22,12 @@ try {
 
 // Initialize express app
 const app = express();
-const port = parseInt(process.env.PORT) || 8080; // Ensure port is a number
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 console.log(`🚀 Starting Mile Safe server on port ${port}`);
 console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+console.log(`📍 Available env vars: PORT=${process.env.PORT}, NODE_ENV=${process.env.NODE_ENV}`);
 
 // CORS configuration
 const corsOptions = {
@@ -142,27 +143,82 @@ app.get('/api/accidents', async (req, res) => {
 
 // Serve index.html for all non-API routes (SPA support) - MUST BE LAST
 app.get('*', (req, res) => {
-  // Skip API routes and health checks
-  if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
-  }
-  // Serve index.html for all other routes
-  const indexPath = path.join(frontendPath, 'index.html');
-  const fs = require('fs');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Frontend files not found');
+  try {
+    // Skip API routes and health checks
+    if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
+      return res.status(404).json({ 
+        error: 'API endpoint not found',
+        path: req.path,
+        method: req.method
+      });
+    }
+    
+    // Serve index.html for all other routes
+    const indexPath = path.join(frontendPath, 'index.html');
+    const fs = require('fs');
+    
+    if (fs.existsSync(indexPath)) {
+      console.log(`📄 Serving SPA route: ${req.path} -> index.html`);
+      res.sendFile(indexPath);
+    } else {
+      console.error(`❌ index.html not found at: ${indexPath}`);
+      res.status(404).send(`
+        <h1>Mile Safe - Frontend Not Found</h1>
+        <p>The frontend files could not be located.</p>
+        <p>Expected at: ${indexPath}</p>
+        <p>Current path: ${req.path}</p>
+        <a href="/health">Health Check</a>
+      `);
+    }
+  } catch (error) {
+    console.error('Error in catch-all route:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: isDevelopment ? error.message : 'Something went wrong'
+    });
   }
 });
 
-// Server listener
+// Global error handler (MUST be after all routes)
+app.use((err, req, res, next) => {
+  console.error('Express error handler:', err.stack);
+  
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ 
+      error: 'Validation Error',
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ 
+      error: 'Unauthorized',
+      message: 'Invalid token',
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  // Default error response
+  res.status(err.status || 500).json({ 
+    error: isDevelopment ? err.message : 'Internal Server Error',
+    stack: isDevelopment ? err.stack : undefined,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Server listener - Bind to 0.0.0.0 for containerized deployment
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`✅ Mile Safe Server running at: http://0.0.0.0:${port}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Health check: http://0.0.0.0:${port}/health`);
   console.log(`🔍 API endpoint: http://0.0.0.0:${port}/api`);
   console.log(`📁 Frontend path: ${frontendPath}`);
+  
+  // Log environment variables for debugging
+  console.log(`🔧 PORT from env: ${process.env.PORT}`);
+  console.log(`🔧 NODE_ENV from env: ${process.env.NODE_ENV}`);
 });
 
 // Handle server startup errors
@@ -174,15 +230,6 @@ server.on('error', (err) => {
     console.error('❌ Server error:', err);
     process.exit(1);
   }
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  res.status(500).json({ 
-    error: isDevelopment ? err.message : 'Internal Server Error',
-    timestamp: new Date().toISOString()
-  });
 });
 
 // Handle unhandled promise rejections

@@ -15,7 +15,7 @@
   "author": "Mile Safe Team",
   "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^3.0.2"
+    "bcryptjs": "^2.4.3"
   },
   "engines": {
     "node": ">=18.0.0",
