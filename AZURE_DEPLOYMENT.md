@@ -94,31 +94,59 @@ To get the publish profile:
 
 Your app is currently running in **mock mode** (no database). Choose one of these options to add persistent data storage:
 
-### **Option A: PlanetScale (MySQL) - Recommended & Free** ⭐
+### **Option A: Azure Database for MySQL - Recommended with Student Credits** ⭐
 
-**Why PlanetScale?**
-- ✅ **Free tier** - 5GB storage, 1 billion row reads/month
-- ✅ **MySQL compatible** - Works with your existing code
-- ✅ **No setup required** - Instant database
-- ✅ **Built-in branching** - Like Git for databases
+**Why Azure Database for MySQL?**
+- ✅ **Student credits cover the cost** - Free with your Azure for Students
+- ✅ **Fully integrated** with your App Service
+- ✅ **High performance** and reliability
+- ✅ **Automatic backups** and security
+- ✅ **No external dependencies**
 
 **Setup Steps:**
-1. **Go to [PlanetScale](https://planetscale.com) and sign up**
-2. **Create a new database:**
-   - Click "Create database"
-   - Name: `milesafe-db`
-   - Region: Choose closest to your Azure region
-   - Click "Create database"
 
-3. **Get connection string:**
-   - Click "Connect" 
-   - Select "Node.js"
-   - Copy the connection details
+1. **Create MySQL Flexible Server in Azure Portal:**
+   - Go to [Azure Portal](https://portal.azure.com)
+   - Click "Create a resource"
+   - Search for "Azure Database for MySQL flexible server"
+   - Click "Create"
 
-4. **Create the users table:**
-   - Click "Console" in PlanetScale dashboard
+2. **Configure the database server:**
+   ```
+   Subscription: Your student subscription
+   Resource Group: milesafe-rg (same as your app)
+   Server name: milesafe-mysql (must be globally unique)
+   Region: East US (same as your app service)
+   MySQL version: 8.0
+   Workload type: Development (cheapest option)
+   Compute + Storage: Burstable, B1ms (1 vCore, 2GB RAM)
+   Admin username: milesafe_admin
+   Password: [Create strong password - save this!]
+   ```
+
+3. **Configure networking:**
+   - **Connectivity method:** Public access (selected IP addresses)
+   - **Firewall rules:** 
+     - ✅ Add current client IP address
+     - ✅ Allow public access from any Azure service within Azure
+
+4. **Click "Review + Create" then "Create"**
+   - This will take 5-10 minutes to deploy
+
+5. **Create the database:**
+   - Once deployed, go to your MySQL server
+   - Click "Databases" in the left menu
+   - Click "+ Add" 
+   - Database name: `milesafe`
+   - Click "Save"
+
+6. **Create the users table:**
+   - In Azure Portal, go to your MySQL server
+   - Click "Connect" in the left menu
+   - Use Azure Cloud Shell or connect with MySQL Workbench
    - Run this SQL:
    ```sql
+   USE milesafe;
    CREATE TABLE users (
      id INT AUTO_INCREMENT PRIMARY KEY,
      username VARCHAR(255) NOT NULL,
@@ -129,21 +157,31 @@ Your app is currently running in **mock mode** (no database). Choose one of thes
    );
    ```
 
-5. **Update Azure environment variables:**
-   - Go to Azure Portal → Your App Service → Configuration
+7. **Update Azure App Service environment variables:**
+   - Go to your App Service → Configuration
    - Update these settings:
    ```
-   DB_HOST=aws.connect.psdb.cloud
-   DB_USER=your-planetscale-username
-   DB_PASS=your-planetscale-password
-   DB_NAME=milesafe-db
+   DB_HOST=milesafe-mysql.mysql.database.azure.com
+   DB_USER=milesafe_admin
+   DB_PASS=[Your MySQL password]
+   DB_NAME=milesafe
    DB_PORT=3306
    ENABLE_DATABASE=true
    ENABLE_MOCK_MODE=false
    ```
    - Click "Save" and restart your app
 
-### **Option B: Supabase (PostgreSQL) - Free Alternative**
+### **Option B: PlanetScale (MySQL) - Free Tier Limited** 
+
+Note: PlanetScale now requires payment for some features, but has a limited free tier.
+
+**Setup Steps:**
+1. **Go to [PlanetScale](https://planetscale.com) and sign up**
+2. **Create a new database** (limited free tier available)
+3. **Get connection details and create users table**
+4. **Update Azure environment variables**
+
+### **Option C: Supabase (PostgreSQL) - Free Alternative**
 
 **Setup Steps:**
 1. **Go to [Supabase](https://supabase.com) and sign up**
@@ -183,51 +221,6 @@ Your app is currently running in **mock mode** (no database). Choose one of thes
      port: process.env.DB_PORT || 5432,
      ssl: { rejectUnauthorized: false }
    });
-   ```
-
-### **Option C: Azure Database for MySQL - Paid but Integrated**
-
-**Setup Steps:**
-1. **Create MySQL server in Azure:**
-   ```bash
-   az mysql flexible-server create \
-     --resource-group milesafe-rg \
-     --name milesafe-mysql \
-     --admin-user milesafe_admin \
-     --admin-password "YourSecurePassword123!" \
-     --sku-name Standard_B1ms \
-     --tier Burstable \
-     --public-access 0.0.0.0 \
-     --storage-size 32
-   ```
-
-2. **Create database:**
-   ```bash
-   az mysql flexible-server db create \
-     --resource-group milesafe-rg \
-     --server-name milesafe-mysql \
-     --database-name milesafe
-   ```
-
-3. **Configure firewall:**
-   ```bash
-   az mysql flexible-server firewall-rule create \
-     --resource-group milesafe-rg \
-     --name milesafe-mysql \
-     --rule-name AllowAzureServices \
-     --start-ip-address 0.0.0.0 \
-     --end-ip-address 0.0.0.0
-   ```
-
-4. **Update Azure environment variables:**
-   ```
-   DB_HOST=milesafe-mysql.mysql.database.azure.com
-   DB_USER=milesafe_admin
-   DB_PASS=YourSecurePassword123!
-   DB_NAME=milesafe
-   DB_PORT=3306
-   ENABLE_DATABASE=true
-   ENABLE_MOCK_MODE=false
    ```
 
 ## **Database Connection Test**
