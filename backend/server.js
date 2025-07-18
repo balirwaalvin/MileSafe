@@ -83,13 +83,34 @@ if (!isDevelopment) {
   });
 }
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
+// Health check endpoint with database status
+app.get('/health', async (req, res) => {
+  const response = {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
-  });
+  };
+
+  // Check database connection
+  try {
+    if (process.env.ENABLE_DATABASE === 'true') {
+      const dbPostgres = require('./db-postgres');
+      if (dbPostgres) {
+        const client = await dbPostgres.connect();
+        await client.query('SELECT 1');
+        client.release();
+        response.database = 'PostgreSQL/Supabase connected successfully';
+      } else {
+        response.database = 'Database connection not available';
+      }
+    } else {
+      response.database = 'Database disabled (mock mode)';
+    }
+  } catch (err) {
+    response.database = `Database connection failed: ${err.message}`;
+  }
+
+  res.status(200).json(response);
 });
 
 // Routes
