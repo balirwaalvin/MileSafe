@@ -17,8 +17,12 @@ if (process.env.DATABASE_URL && !process.env.DB_HOST) {
   process.env.DB_NAME = dbUrl.pathname ? dbUrl.pathname.slice(1) : '';
   process.env.DB_PORT = dbUrl.port || 5432;
   process.env.ENABLE_DATABASE = 'true';
+  process.env.ENABLE_MOCK_MODE = 'false';
   
   console.log('📊 Heroku PostgreSQL detected and configured');
+  console.log(`📊 DB Host: ${process.env.DB_HOST}`);
+  console.log(`📊 DB Name: ${process.env.DB_NAME}`);
+  console.log(`📊 DB Port: ${process.env.DB_PORT}`);
 }
 
 // Try to import auth routes, create fallback if not found
@@ -110,20 +114,33 @@ app.get('/health', async (req, res) => {
   // Check database connection
   try {
     if (process.env.ENABLE_DATABASE === 'true') {
-      const dbPostgres = require('./db-postgres');
-      if (dbPostgres) {
-        const client = await dbPostgres.connect();
-        await client.query('SELECT 1');
-        client.release();
-        response.database = 'PostgreSQL/Supabase connected successfully';
+      // Try PostgreSQL first (Heroku)
+      if (process.env.DATABASE_URL || process.env.DB_HOST) {
+        const dbPostgres = require('./db-postgres');
+        if (dbPostgres) {
+          const client = await dbPostgres.connect();
+          await client.query('SELECT 1');
+          client.release();
+          response.database = 'PostgreSQL connected successfully';
+        } else {
+          response.database = 'PostgreSQL connection not available';
+        }
       } else {
-        response.database = 'Database connection not available';
+        response.database = 'No database configuration found';
       }
     } else {
       response.database = 'Database disabled (mock mode)';
     }
   } catch (err) {
     response.database = `Database connection failed: ${err.message}`;
+    // Log more details for debugging
+    console.error('Health check database error:', {
+      message: err.message,
+      code: err.code,
+      DATABASE_URL: process.env.DATABASE_URL ? 'set' : 'not set',
+      DB_HOST: process.env.DB_HOST || 'not set',
+      ENABLE_DATABASE: process.env.ENABLE_DATABASE
+    });
   }
 
   res.status(200).json(response);
@@ -175,6 +192,17 @@ app.get('/api/accidents', async (req, res) => {
   } catch (err) {
     console.error('Error fetching accident data:', err);
     res.status(500).json({ error: 'Failed to fetch accident data' });
+  }
+});
+
+// Database initialization endpoint (remove after first use)
+app.get('/init-db', async (req, res) => {
+  try {
+    const { initDatabase } = require('./init-db');
+    const result = await initDatabase();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
