@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-enc
 
 // Serve static files from the root directory (for frontend)
 const frontendPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, 'frontend') 
+  ? path.join(__dirname, '..') 
   : path.join(__dirname, '..');
 
 app.use(express.static(frontendPath));
