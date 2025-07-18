@@ -9,7 +9,10 @@
     "build": "echo 'Building application...' && cd backend && npm install",
     "deploy": "chmod +x deploy.sh && ./deploy.sh",
     "update": "chmod +x update.sh && ./update.sh",
-    "backup": "chmod +x backup.sh && ./backup.sh"
+    "backup": "chmod +x backup.sh && ./backup.sh",
+    "azure:deploy": "echo 'Deploying to Azure...' && git push origin main",
+    "azure:logs": "echo 'Check Azure Portal for logs'",
+    "postinstall": "cd backend && npm install"
   },
   "keywords": ["road-safety", "emergency", "education", "sos"],
   "author": "Mile Safe Team",

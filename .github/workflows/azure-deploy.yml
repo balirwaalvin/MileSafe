@@ -1,0 +1,43 @@
+name: Deploy Mile Safe to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🛎️ Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: 📦 Install backend dependencies
+      run: |
+        cd backend
+        npm ci --only=production
+        
+    - name: 🧪 Run basic tests (if any)
+      run: |
+        cd backend
+        npm test --if-present
+        
+    - name: 🚀 Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ secrets.AZURE_APP_NAME }}
+        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+        package: .
+        
+    - name: 🔍 Health Check
+      run: |
+        sleep 30
+        curl -f ${{ secrets.AZURE_APP_URL }}/health || exit 1
