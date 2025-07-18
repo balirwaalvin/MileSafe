@@ -206,6 +206,39 @@ app.get('/init-db', async (req, res) => {
   }
 });
 
+// Debug endpoint to check users in database
+app.get('/debug/users', async (req, res) => {
+  try {
+    if (!process.env.DATABASE_URL && !process.env.DB_HOST) {
+      return res.json({ error: 'No database configured' });
+    }
+
+    const dbPostgres = require('./db-postgres');
+    const result = await dbPostgres.query('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 10');
+    
+    res.json({
+      message: 'Users in database',
+      count: result.rows.length,
+      users: result.rows
+    });
+  } catch (error) {
+    console.error('Debug users error:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      message: error.message 
+    });
+  }
+});
+
+// Debug endpoint to test JWT
+app.get('/debug/jwt', (req, res) => {
+  res.json({
+    jwt_secret_set: !!process.env.JWT_SECRET,
+    jwt_secret_length: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0,
+    node_env: process.env.NODE_ENV
+  });
+});
+
 // Serve index.html for all non-API routes (SPA support) - MUST BE LAST
 app.get('*', (req, res) => {
   try {

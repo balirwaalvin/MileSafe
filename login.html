@@ -68,6 +68,8 @@
       }
 
       try {
+        console.log('🔍 Attempting login for:', email);
+        
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
@@ -76,28 +78,46 @@
           body: JSON.stringify({ email, password })
         });
 
+        console.log('🔍 Response status:', response.status);
+        console.log('🔍 Response headers:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+          console.error('❌ HTTP error status:', response.status);
+        }
+
         const data = await response.json();
+        console.log('🔍 Response data:', data);
 
         if (response.ok) {
           errorMsg.style.color = 'green';
           errorMsg.textContent = 'Login successful! Redirecting...';
-          localStorage.setItem('token', data.token);
+          errorMsg.style.display = 'block';
+          
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+            console.log('✅ Token saved to localStorage');
+          } else {
+            console.warn('⚠️ No token in response');
+          }
 
           // Redirect after 1.5 seconds
           setTimeout(() => {
             if (data.role === 'admin') {
+              console.log('🔄 Redirecting to admin dashboard');
               window.location.href = 'admin-dashboard.html';
             } else {
+              console.log('🔄 Redirecting to home page');
               window.location.href = 'index.html';
             }
           }, 1500);
         } else {
+          console.error('❌ Login failed:', data.message);
           errorMsg.style.color = 'red';
-          errorMsg.textContent = data.message;
+          errorMsg.textContent = data.message || 'Login failed';
           errorMsg.style.display = 'block';
         }
       } catch (err) {
-        console.error(err);
+        console.error('❌ Network error:', err);
         errorMsg.style.color = 'red';
         errorMsg.textContent = 'Network error. Could not connect to backend.';
         errorMsg.style.display = 'block';
