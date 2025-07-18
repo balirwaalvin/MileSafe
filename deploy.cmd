@@ -11,7 +11,7 @@
 :: Verify node.js installed
 where node 2>nul >nul
 IF %ERRORLEVEL% NEQ 0 (
-  echo Missing node.js executable, please install node.js, if already installed make sure it can be reached from current environment.
+  echo Missing node.js executable
   goto error
 )
 
@@ -44,7 +44,6 @@ IF NOT DEFINED KUDU_SYNC_CMD (
   call npm install kudusync -g --silent
   IF !ERRORLEVEL! NEQ 0 goto error
 
-  :: Locally just running "kudu sync"
   SET KUDU_SYNC_CMD=%appdata%\npm\kudu.cmd
 )
 
@@ -60,18 +59,11 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
   IF !ERRORLEVEL! NEQ 0 goto error
 )
 
-:: 2. Install npm packages for root
-IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
-  pushd "%DEPLOYMENT_TARGET%"
-  call :ExecuteCmd npm install --production
-  IF !ERRORLEVEL! NEQ 0 goto error
-  popd
-)
-
-:: 3. Install npm packages for backend
+:: 2. Install npm packages for backend
 IF EXIST "%DEPLOYMENT_TARGET%\backend\package.json" (
   pushd "%DEPLOYMENT_TARGET%\backend"
-  call :ExecuteCmd npm install --production
+  echo Installing backend dependencies...
+  call :ExecuteCmd npm install --production --silent
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
