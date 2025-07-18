@@ -5,21 +5,24 @@
 2. GitHub repository with your code
 3. Azure CLI (optional, for advanced setup)
 
-## Step 1: Create Azure App Service
+## Step 1: Create Azure App Service (Web App)
+
+**Important:** Choose **"Web App"** NOT "Static Web App" because Mile Safe has a Node.js backend server.
 
 ### Option A: Using Azure Portal (Recommended)
 1. **Go to [Azure Portal](https://portal.azure.com)**
 2. **Click "Create a resource"**
-3. **Search for "App Service" and click "Create"**
+3. **Search for "App Service" and click "Create"** 
+   - ⚠️ **Make sure you select "App Service" (Web App), NOT "Static Web App"**
 4. **Fill in the details:**
    - **Subscription:** Your Azure subscription
    - **Resource Group:** Create new "milesafe-rg"
    - **Name:** `milesafe-app` (must be globally unique)
-   - **Publish:** Code
-   - **Runtime stack:** Node 18 LTS
-   - **Operating System:** Linux
+   - **Publish:** **Code** (not Docker Container)
+   - **Runtime stack:** **Node 20 LTS** (recommended) or **Node 22 LTS**
+   - **Operating System:** **Linux**
    - **Region:** East US (or closest to you)
-   - **Pricing tier:** F1 (Free) for testing, B1 (Basic) for production
+   - **Pricing tier:** **F1 (Free)** for testing, **B1 (Basic)** for production
 
 5. **Click "Review + Create"**
 
@@ -35,7 +38,7 @@ az group create --name milesafe-rg --location eastus
 az appservice plan create --name milesafe-plan --resource-group milesafe-rg --sku F1 --is-linux
 
 # Create web app
-az webapp create --resource-group milesafe-rg --plan milesafe-plan --name milesafe-app --runtime "NODE|18-lts"
+az webapp create --resource-group milesafe-rg --plan milesafe-plan --name milesafe-app --runtime "NODE|20-lts"
 ```
 
 ## Step 2: Configure Environment Variables
@@ -54,7 +57,7 @@ DB_USER=milesafe_user
 DB_PASS=MileSafe2024!SecurePassword
 DB_NAME=milesafe
 DB_PORT=3306
-WEBSITE_NODE_DEFAULT_VERSION=18.17.0
+WEBSITE_NODE_DEFAULT_VERSION=20.17.0
 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 ```
 
@@ -87,18 +90,173 @@ To get the publish profile:
 3. **Copy the entire XML content**
 4. **Add it as `AZURE_PUBLISH_PROFILE` secret in GitHub**
 
-## Step 4: Database Setup (Optional)
+## Step 4: Database Setup (Choose One Option)
 
-### Option A: Azure Database for MySQL
-```bash
-# Create MySQL server
-az mysql server create --resource-group milesafe-rg --name milesafe-db --admin-user milesafe_admin --admin-password YourPassword123! --sku-name B_Gen5_1
-```
+Your app is currently running in **mock mode** (no database). Choose one of these options to add persistent data storage:
 
-### Option B: Use external database service
-- **PlanetScale** (recommended for MySQL)
-- **Supabase** (PostgreSQL)
-- **MongoDB Atlas**
+### **Option A: PlanetScale (MySQL) - Recommended & Free** ⭐
+
+**Why PlanetScale?**
+- ✅ **Free tier** - 5GB storage, 1 billion row reads/month
+- ✅ **MySQL compatible** - Works with your existing code
+- ✅ **No setup required** - Instant database
+- ✅ **Built-in branching** - Like Git for databases
+
+**Setup Steps:**
+1. **Go to [PlanetScale](https://planetscale.com) and sign up**
+2. **Create a new database:**
+   - Click "Create database"
+   - Name: `milesafe-db`
+   - Region: Choose closest to your Azure region
+   - Click "Create database"
+
+3. **Get connection string:**
+   - Click "Connect" 
+   - Select "Node.js"
+   - Copy the connection details
+
+4. **Create the users table:**
+   - Click "Console" in PlanetScale dashboard
+   - Run this SQL:
+   ```sql
+   CREATE TABLE users (
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     username VARCHAR(255) NOT NULL,
+     email VARCHAR(255) UNIQUE NOT NULL,
+     password VARCHAR(255) NOT NULL,
+     role ENUM('user', 'admin') DEFAULT 'user',
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   );
+   ```
+
+5. **Update Azure environment variables:**
+   - Go to Azure Portal → Your App Service → Configuration
+   - Update these settings:
+   ```
+   DB_HOST=aws.connect.psdb.cloud
+   DB_USER=your-planetscale-username
+   DB_PASS=your-planetscale-password
+   DB_NAME=milesafe-db
+   DB_PORT=3306
+   ENABLE_DATABASE=true
+   ENABLE_MOCK_MODE=false
+   ```
+   - Click "Save" and restart your app
+
+### **Option B: Supabase (PostgreSQL) - Free Alternative**
+
+**Setup Steps:**
+1. **Go to [Supabase](https://supabase.com) and sign up**
+2. **Create new project:**
+   - Name: `mile-safe`
+   - Database password: Create strong password
+   - Region: Choose closest to Azure
+
+3. **Create users table:**
+   - Go to SQL Editor
+   - Run this SQL:
+   ```sql
+   CREATE TABLE users (
+     id SERIAL PRIMARY KEY,
+     username VARCHAR(255) NOT NULL,
+     email VARCHAR(255) UNIQUE NOT NULL,
+     password VARCHAR(255) NOT NULL,
+     role VARCHAR(50) DEFAULT 'user',
+     created_at TIMESTAMP DEFAULT NOW()
+   );
+   ```
+
+4. **Get connection details:**
+   - Go to Settings → Database
+   - Copy connection details
+
+5. **Update your backend code** (you'll need to modify db.js for PostgreSQL):
+   ```javascript
+   // Install: npm install pg
+   const { Pool } = require('pg');
+   
+   const pool = new Pool({
+     host: process.env.DB_HOST,
+     user: process.env.DB_USER,
+     password: process.env.DB_PASS,
+     database: process.env.DB_NAME,
+     port: process.env.DB_PORT || 5432,
+     ssl: { rejectUnauthorized: false }
+   });
+   ```
+
+### **Option C: Azure Database for MySQL - Paid but Integrated**
+
+**Setup Steps:**
+1. **Create MySQL server in Azure:**
+   ```bash
+   az mysql flexible-server create \
+     --resource-group milesafe-rg \
+     --name milesafe-mysql \
+     --admin-user milesafe_admin \
+     --admin-password "YourSecurePassword123!" \
+     --sku-name Standard_B1ms \
+     --tier Burstable \
+     --public-access 0.0.0.0 \
+     --storage-size 32
+   ```
+
+2. **Create database:**
+   ```bash
+   az mysql flexible-server db create \
+     --resource-group milesafe-rg \
+     --server-name milesafe-mysql \
+     --database-name milesafe
+   ```
+
+3. **Configure firewall:**
+   ```bash
+   az mysql flexible-server firewall-rule create \
+     --resource-group milesafe-rg \
+     --name milesafe-mysql \
+     --rule-name AllowAzureServices \
+     --start-ip-address 0.0.0.0 \
+     --end-ip-address 0.0.0.0
+   ```
+
+4. **Update Azure environment variables:**
+   ```
+   DB_HOST=milesafe-mysql.mysql.database.azure.com
+   DB_USER=milesafe_admin
+   DB_PASS=YourSecurePassword123!
+   DB_NAME=milesafe
+   DB_PORT=3306
+   ENABLE_DATABASE=true
+   ENABLE_MOCK_MODE=false
+   ```
+
+## **Database Connection Test**
+
+After setting up any database option:
+
+1. **Check your app's health endpoint:**
+   - Visit: `https://your-app-name.azurewebsites.net/health`
+   - Should show database connection status
+
+2. **Test authentication:**
+   - Try registering a new user
+   - Try logging in
+   - Check Azure logs for any errors
+
+3. **Monitor logs:**
+   - Azure Portal → Your App Service → Log stream
+   - Look for "Database connected successfully" message
+
+## **If You Get Database Errors:**
+
+1. **Check environment variables are saved**
+2. **Restart your App Service** (very important!)
+3. **Check firewall settings** (for Azure Database)
+4. **Verify connection string format**
+
+**Most Common Issue:** Forgetting to restart the App Service after updating environment variables!
+
+---
 
 ## Step 5: Custom Domain (Optional)
 
@@ -106,6 +264,30 @@ az mysql server create --resource-group milesafe-rg --name milesafe-db --admin-u
 2. **Click "Custom domains"**
 3. **Click "Add custom domain"**
 4. **Follow the DNS configuration steps**
+
+## ⚡ Quick Decision Guide: Web App vs Static Web App
+
+### **Choose Web App (App Service)** ✅ - **This is what you need!**
+**For applications with:**
+- ✅ Backend server (Node.js, Python, .NET, etc.)
+- ✅ API endpoints
+- ✅ Database connections
+- ✅ Server-side authentication
+- ✅ File uploads
+- ✅ Real-time features
+
+**Mile Safe uses:** Node.js server, API routes, authentication, SOS alerts → **Web App**
+
+### **Static Web App** ❌ - **Not for Mile Safe**
+**For applications with:**
+- ❌ Frontend only (React, Vue, Angular SPA)
+- ❌ No backend server
+- ❌ Only static HTML/CSS/JS files
+- ❌ Serverless functions only (Azure Functions)
+
+**Examples:** Portfolio sites, documentation, simple landing pages
+
+---
 
 ## Deployment Commands
 
@@ -130,7 +312,7 @@ az webapp deploy --resource-group milesafe-rg --name milesafe-app --src-path .
 1. **"Application Error"**
    - Check Application Logs in Azure Portal
    - Verify environment variables are set correctly
-   - Ensure Node.js version matches (18.x)
+   - Ensure Node.js version matches (20.x or 22.x)
 
 2. **Static files not loading**
    - Verify web.config is properly configured
