@@ -239,6 +239,52 @@ app.get('/debug/jwt', (req, res) => {
   });
 });
 
+// Test endpoint to create a test user (for debugging only)
+app.post('/debug/create-test-user', async (req, res) => {
+  try {
+    if (!process.env.DATABASE_URL && !process.env.DB_HOST) {
+      return res.json({ error: 'No database configured' });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const testEmail = 'test@milesafe.com';
+    const testPassword = 'test123';
+    const hashedPassword = await bcrypt.hash(testPassword, 10);
+
+    const dbPostgres = require('./db-postgres');
+    
+    // Check if test user already exists
+    const existingResult = await dbPostgres.query('SELECT * FROM users WHERE email = $1', [testEmail]);
+    if (existingResult.rows.length > 0) {
+      return res.json({ 
+        message: 'Test user already exists',
+        email: testEmail,
+        password: testPassword 
+      });
+    }
+
+    // Create test user
+    const result = await dbPostgres.query(
+      'INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id',
+      ['testuser', testEmail, hashedPassword, 'user']
+    );
+    
+    res.json({
+      message: 'Test user created successfully',
+      user_id: result.rows[0].id,
+      email: testEmail,
+      password: testPassword,
+      note: 'Use these credentials to test login'
+    });
+  } catch (error) {
+    console.error('Create test user error:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      message: error.message 
+    });
+  }
+});
+
 // Serve index.html for all non-API routes (SPA support) - MUST BE LAST
 app.get('*', (req, res) => {
   try {
