@@ -5,6 +5,22 @@ const path = require('path');
 const fetch = require('node-fetch');
 require('dotenv').config();
 
+// Heroku DATABASE_URL parsing
+if (process.env.DATABASE_URL && !process.env.DB_HOST) {
+  const url = require('url');
+  const dbUrl = url.parse(process.env.DATABASE_URL);
+  const auth = dbUrl.auth ? dbUrl.auth.split(':') : ['', ''];
+  
+  process.env.DB_HOST = dbUrl.hostname;
+  process.env.DB_USER = auth[0];
+  process.env.DB_PASS = auth[1];
+  process.env.DB_NAME = dbUrl.pathname ? dbUrl.pathname.slice(1) : '';
+  process.env.DB_PORT = dbUrl.port || 5432;
+  process.env.ENABLE_DATABASE = 'true';
+  
+  console.log('📊 Heroku PostgreSQL detected and configured');
+}
+
 // Try to import auth routes, create fallback if not found
 let authRoutes;
 try {
